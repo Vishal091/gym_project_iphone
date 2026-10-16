@@ -122,12 +122,12 @@ struct ContentView: View {
 
                 VStack(spacing: 10) {
                     HStack(spacing: 10) {
-                        Metric(title: "Active members", value: "(members.count)", subtitle: "Across all plans", icon: "person.2.fill")
-                        Metric(title: "Checked in", value: "(members.filter(\.checkedIn).count)", subtitle: "Today's attendance", icon: "checkmark.seal.fill")
+                        Metric(title: "Active members", value: String(members.count), subtitle: "Across all plans", icon: "person.2.fill")
+                        Metric(title: "Checked in", value: String(members.filter(\.checkedIn).count), subtitle: "Today's attendance", icon: "checkmark.seal.fill")
                     }
                     HStack(spacing: 10) {
-                        Metric(title: "Fee alerts", value: "(urgent.count)", subtitle: "Needs follow-up", icon: "bell.badge.fill", warning: true)
-                        Metric(title: "Overdue", value: "(members.filter { $0.due == "Overdue" }.count)", subtitle: "Past due date", icon: "calendar.badge.exclamationmark", warning: true)
+                        Metric(title: "Fee alerts", value: String(urgent.count), subtitle: "Needs follow-up", icon: "bell.badge.fill", warning: true)
+                        Metric(title: "Overdue", value: String(members.filter { $0.due == "Overdue" }.count), subtitle: "Past due date", icon: "calendar.badge.exclamationmark", warning: true)
                     }
                 }
                 HStack {
@@ -151,7 +151,7 @@ struct ContentView: View {
 
     private var membersScreen: some View {
         VStack(alignment: .leading, spacing: 12) {
-            heading("Members", subtitle: "(members.count) members in your directory")
+            heading("Members", subtitle: String(members.count) + " members in your directory")
             HStack(spacing: 9) {
                 Image(systemName: "magnifyingglass").foregroundStyle(Style.muted)
                 TextField("Search name or phone…", text: $search).font(.system(size: 14)).autocorrectionDisabled()
@@ -172,7 +172,7 @@ struct ContentView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("TODAY'S CHECK-INS").font(.system(size: 10, weight: .heavy)).tracking(1).foregroundStyle(Style.mint)
-                    Text("(members.filter(\.checkedIn).count) / (members.count)").font(.system(size: 27, weight: .bold, design: .rounded)).foregroundStyle(.white)
+                    Text(String(members.filter(\.checkedIn).count) + " / " + String(members.count)).font(.system(size: 27, weight: .bold, design: .rounded)).foregroundStyle(.white)
                 }
                 Spacer(); Image(systemName: "checkmark.seal.fill").font(.system(size: 31)).foregroundStyle(Style.mint)
             }.padding(17).background(Style.forest, in: RoundedRectangle(cornerRadius: 18))
@@ -189,8 +189,8 @@ struct ContentView: View {
         return VStack(alignment: .leading, spacing: 13) {
             heading("Fee tracker", subtitle: "Find outstanding fees and follow-ups.")
             HStack(spacing: 10) {
-                Summary(title: "NEEDS ATTENTION", value: "(dues.count)")
-                Summary(title: "OVERDUE", value: "(members.filter { $0.due == "Overdue" }.count)")
+                Summary(title: "NEEDS ATTENTION", value: String(dues.count))
+                Summary(title: "OVERDUE", value: String(members.filter { $0.due == "Overdue" }.count))
             }
             ScrollView(showsIndicators: false) {
                 LazyVStack(spacing: 10) {
@@ -200,7 +200,7 @@ struct ContentView: View {
                                 Avatar(name: m.name)
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(m.name).font(.system(size: 14, weight: .bold)).foregroundStyle(Style.ink)
-                                    Text("(m.plan) · Due (m.due.lowercased())").font(.system(size: 11)).foregroundStyle(Style.muted)
+                                    Text(m.plan + " · Due " + m.due.lowercased()).font(.system(size: 11)).foregroundStyle(Style.muted)
                                 }
                                 Spacer(); Text(rupees(m.fee)).font(.system(size: 14, weight: .bold)).foregroundStyle(Style.ink)
                             }
@@ -263,7 +263,7 @@ private struct MemberRow: View {
                 Avatar(name: member.name)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(member.name).font(.system(size: 13, weight: .bold)).foregroundStyle(Style.ink)
-                    Text("Membership · (rupees(member.fee))").font(.system(size: 11)).foregroundStyle(Style.muted)
+                    Text("Membership · " + rupees(member.fee)).font(.system(size: 11)).foregroundStyle(Style.muted)
                 }
                 Spacer(); DueBadge(due: member.due)
             }.padding(12).background(.white, in: RoundedRectangle(cornerRadius: 16))
@@ -286,7 +286,7 @@ private struct MemberCard: View {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(member.plan).font(.system(size: 12, weight: .semibold)).foregroundStyle(Style.ink)
-                    Text("(rupees(member.fee)) · Due (member.due)").font(.system(size: 11)).foregroundStyle(Style.muted)
+                    Text(rupees(member.fee) + " · Due " + member.due).font(.system(size: 11)).foregroundStyle(Style.muted)
                 }
                 Spacer()
                 Button(actionTitle, action: action).font(.system(size: 11, weight: .bold)).foregroundStyle(Style.forest)
@@ -356,5 +356,5 @@ private func fee(_ plan: String) -> Int {
 private func rupees(_ amount: Int) -> String {
     let f = NumberFormatter()
     f.numberStyle = .currency; f.currencyCode = "INR"; f.locale = Locale(identifier: "en_IN"); f.maximumFractionDigits = 0
-    return f.string(from: NSNumber(value: amount)) ?? "₹(amount)"
+    return f.string(from: NSNumber(value: amount)) ?? ("₹" + String(amount))
 }

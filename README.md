@@ -2,13 +2,20 @@
 
 Native iPhone app for a small-gym management SaaS, built with SwiftUI.
 
-## MVP scope
-- Owner dashboard, member directory, attendance and fee due views
-- Add member flow and sample data for the first UI prototype
-- Local demo data only; shared backend sync is a later phase
+## Current beta features
+- Dashboard metrics calculated from saved membership, attendance, and payment records
+- Member directory search, duplicate-phone validation, profile and membership date editing
+- Editable membership plan names, durations, and fees
+- Date-aware attendance records and check-in history
+- Overdue and upcoming fee reminders
+- Payment method selection, dated transactions, and per-member payment history
+- Local persistence using Codable data saved to UserDefaults
+- Empty states and a dynamic dashboard date
 
 ## Build
-Open `GymPilot.xcodeproj` in Xcode 15 or newer, choose an iPhone simulator, then run the GymPilot scheme.
+Open `GymPilot.xcodeproj` in Xcode 15 or newer, select the shared GymPilot scheme, choose an iPhone simulator, then run the GymPilot scheme.
 
-## Security note
-Do not commit signing certificates, API keys, passwords, or customer data.
+## Important limitations
+This beta stores data locally on each device. Android and iPhone do not yet share data. A secure backend with authentication and gym-level data isolation is required before production use. Sample members and transactions are seeded on first launch.
+
+Do not commit signing certificates, API keys, passwords, or real customer data.

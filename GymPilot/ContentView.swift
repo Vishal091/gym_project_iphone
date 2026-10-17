@@ -156,6 +156,8 @@ struct ContentView: View {
     @State private var searchText = ""
     @State private var showingAddMember = false
     @State private var showingEditDates = false
+    @State private var showingPaymentMethod = false
+    @State private var pendingPaymentID: UUID?
 
     private var selectedMember: Member? { data.members.first { $0.id == selectedMemberID } }
     private var activePages: [AppScreen] { [.home, .members, .attendance, .dues] }
@@ -173,7 +175,7 @@ struct ContentView: View {
                 case .profile:
                     if let member = selectedMember {
                         MemberProfilePage(data: data, member: member, checkedIn: isCheckedIn(member.id),
-                                          onRecordPayment: { recordPayment(for: member.id) },
+                                          onRecordPayment: { requestPayment(for: member.id) },
                                           onToggleCheckIn: { toggleCheckIn(member.id) },
                                           onEditDates: { showingEditDates = true })
                     } else { EmptyState(title: "Member not found", message: "Return to the directory and select a member.") }
@@ -208,6 +210,15 @@ struct ContentView: View {
                     showingEditDates = false
                 }
             }
+        }
+
+        .confirmationDialog("Choose a payment method", isPresented: $showingPaymentMethod, titleVisibility: .visible) {
+            Button("Cash") { finishPayment("Cash") }
+            Button("UPI") { finishPayment("UPI") }
+            Button("Bank transfer") { finishPayment("Bank transfer") }
+            Button("Card") { finishPayment("Card") }
+            Button("Other") { finishPayment("Other") }
+            Button("Cancel", role: .cancel) { pendingPaymentID = nil }
         }
     }
 
@@ -369,7 +380,7 @@ struct ContentView: View {
                 ScrollView(showsIndicators: false) {
                     LazyVStack(spacing: 9) {
                         ForEach(dueMembers) { member in
-                            DueMemberCard(member: member, onProfile: { openProfile(member.id) }, onPay: { recordPayment(for: member.id) })
+                            DueMemberCard(member: member, onProfile: { openProfile(member.id) }, onPay: { requestPayment(for: member.id) })
                         }
                     }.padding(.bottom, 15)
                 }
@@ -411,13 +422,19 @@ struct ContentView: View {
             data.attendance.append(AttendanceRecord(id: UUID(), memberId: id, day: today, checkedInAt: ISO8601DateFormatter().string(from: Date())))
         }
     }
-    private func recordPayment(for id: UUID) {
+    private func requestPayment(for id: UUID) { pendingPaymentID = id; showingPaymentMethod = true }
+    private func finishPayment(_ method: String) {
+        guard let id = pendingPaymentID else { return }
+        recordPayment(for: id, method: method)
+        pendingPaymentID = nil
+    }
+    private func recordPayment(for id: UUID, method: String) {
         guard let index = data.members.firstIndex(where: { $0.id == id }) else { return }
         let member = data.members[index]
         let duration = data.plans.first(where: { $0.id == member.planId })?.durationMonths ?? 1
         let base = max(member.dueDate, today)
         let nextDue = monthAfter(due: base, months: duration)
-        data.payments.append(PaymentRecord(id: UUID(), memberId: id, amount: member.fee, paidOn: today, method: "Cash"))
+        data.payments.append(PaymentRecord(id: UUID(), memberId: id, amount: member.fee, paidOn: today, method: method))
         data.members[index].dueDate = nextDue
         data.members[index].expiryDate = dayBefore(nextDue)
     }

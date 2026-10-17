@@ -79,6 +79,17 @@ private enum DateSupport {
         guard let start = date(member.startDate), let end = date(member.expiryDate), let current = date(today) else { return false }
         return start <= current && end >= current
     }
+    static func expired(_ member: Member, today: String = dayString()) -> Bool {
+        guard let end = date(member.expiryDate), let current = date(today) else { return false }
+        return end < current
+    }
+    static func status(_ member: Member, today: String = dayString()) -> String {
+        guard let start = date(member.startDate) else { return "Date needed" }
+        guard let current = date(today) else { return "Date needed" }
+        if current < start { return "Not started" }
+        if expired(member, today: today) { return "Expired" }
+        return "Active"
+    }
 }
 
 private enum GymStore {
@@ -283,7 +294,7 @@ struct ContentView: View {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("COLLECTED THIS MONTH").font(.system(size: 10, weight: .heavy)).tracking(1.1).foregroundStyle(GymStyle.mint)
                     Text(rupees(monthCollection)).font(.system(size: 29, weight: .bold, design: .rounded)).foregroundStyle(.white)
-                    Text("Confirmed payment records only").font(.system(size: 11)).foregroundStyle(.white.opacity(0.8))
+                    Text("Demo transactions are included in this preview.").font(.system(size: 11)).foregroundStyle(.white.opacity(0.8))
                     Rectangle().fill(.white.opacity(0.18)).frame(height: 1).padding(.vertical, 4)
                     Text("Saved on this device. Shared sync requires a backend.").font(.system(size: 11)).foregroundStyle(.white.opacity(0.85))
                 }.padding(18).frame(maxWidth: .infinity, alignment: .leading).background(GymStyle.forest, in: RoundedRectangle(cornerRadius: 22))
@@ -294,7 +305,7 @@ struct ContentView: View {
                     }
                     HStack(spacing: 10) {
                         MetricCard(title: "Fee alerts", value: String(dueSoon), subtitle: "Due within 7 days", icon: "bell.badge.fill", warning: true)
-                        MetricCard(title: "Expired", value: String(data.members.filter { !DateSupport.active($0) }.count), subtitle: "Outside active dates", icon: "calendar.badge.exclamationmark", warning: true)
+                        MetricCard(title: "Expired", value: String(data.members.filter { DateSupport.expired($0) }.count), subtitle: "Outside active dates", icon: "calendar.badge.exclamationmark", warning: true)
                     }
                 }
                 HStack {
@@ -503,7 +514,7 @@ private struct MemberCard: View {
                     Text(member.phone).font(.system(size: 12)).foregroundStyle(GymStyle.muted)
                 }
                 Spacer(minLength: 3)
-                DueBadge(due: DateSupport.active(member) ? DateSupport.dueLabel(member.dueDate) : "Expired")
+                DueBadge(due: DateSupport.active(member) ? DateSupport.dueLabel(member.dueDate) : DateSupport.status(member))
             }
             Rectangle().fill(GymStyle.border).frame(height: 1)
             HStack {
@@ -553,7 +564,7 @@ private struct MemberProfilePage: View {
                     Text(member.name).font(.system(size: 20, weight: .bold)).foregroundStyle(GymStyle.ink)
                     Text(member.phone).font(.system(size: 12)).foregroundStyle(GymStyle.muted)
                 }
-                Spacer(); DueBadge(due: DateSupport.active(member) ? "Active" : "Expired")
+                Spacer(); DueBadge(due: DateSupport.status(member))
             }
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 10) {
